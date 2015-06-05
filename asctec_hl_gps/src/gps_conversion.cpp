@@ -69,17 +69,33 @@ GpsConversion::GpsConversion() :
     gps_imu_sync_.setInterMessageLowerBound(0, ros::Duration(0.180)); // gps arrives at max with 5 Hz
   }
 
-  if (nh.getParam("/gps_ref_latitude", ref_latitude_))
+  if (!checkGPSReference())
   {
-    if (nh.getParam("/gps_ref_longitude", ref_longitude_))
+    ROS_WARN("No GPS reference point is set on initialization");
+  }
+  else
+  {
+    ROS_INFO("GPS reference point is set on initialization");
+  }
+}
+
+bool GpsConversion::checkGPSReference()
+{
+  // To comply with old logic, this function only triggers once
+  if (have_reference_) return true;
+
+  if (nh_.getParam("/gps_ref_latitude", ref_latitude_))
+  {
+    if (nh_.getParam("/gps_ref_longitude", ref_longitude_))
     {
-      if (nh.getParam("/gps_ref_altitude", ref_altitude_))
+      if (nh_.getParam("/gps_ref_altitude", ref_altitude_))
       {
         initReference(ref_latitude_, ref_longitude_, ref_altitude_);
         have_reference_ = true;
       }
     }
   }
+  return have_reference_;
 }
 
 bool GpsConversion::zeroHeightCb(std_srvs::EmptyRequest & req, std_srvs::EmptyResponse & resp)
@@ -97,7 +113,7 @@ void GpsConversion::syncCallback(const sensor_msgs::NavSatFixConstPtr & gps,
     return;
   }
 
-  if (!have_reference_)
+  if (!have_reference_ && !checkGPSReference())
   {
     ROS_WARN_STREAM_THROTTLE(1, "No GPS reference point set, not publishing");
     return;
@@ -122,7 +138,7 @@ void GpsConversion::syncCallback(const sensor_msgs::NavSatFixConstPtr & gps,
 
 void GpsConversion::gpsCallback(const sensor_msgs::NavSatFixConstPtr & gps)
 {
-  if (!have_reference_)
+  if (!have_reference_ && !checkGPSReference())
   {
     ROS_WARN_STREAM_THROTTLE(1, "No GPS reference point set, not publishing");
     return;
@@ -148,7 +164,7 @@ void GpsConversion::gpsCallback(const sensor_msgs::NavSatFixConstPtr & gps)
 
 void GpsConversion::gpsCustomCallback(const asctec_hl_comm::GpsCustomConstPtr & gps)
 {
-  if (!have_reference_)
+  if (!have_reference_ && !checkGPSReference())
   {
     ROS_WARN_STREAM_THROTTLE(1, "No GPS reference point set, not publishing");
     return;
@@ -186,7 +202,7 @@ void GpsConversion::imuCallback(const asctec_hl_comm::mav_imuConstPtr & imu)
     return;
   }
 
-  if (!have_reference_)
+  if (!have_reference_ && ! checkGPSReference())
   {
     ROS_WARN_STREAM_THROTTLE(1, "No GPS reference point set, not publishing");
     return;

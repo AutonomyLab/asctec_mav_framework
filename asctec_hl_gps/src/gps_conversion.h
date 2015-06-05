@@ -61,6 +61,7 @@ private:
   static const double DEG2RAD = M_PI/180.0;
   const Eigen::Quaterniond Q_90_DEG;
 
+  bool checkGPSReference();
   void syncCallback(const sensor_msgs::NavSatFixConstPtr & gps, const asctec_hl_comm::mav_imuConstPtr & imu);
   void gpsCallback(const sensor_msgs::NavSatFixConstPtr & gps);
   void gpsCustomCallback(const asctec_hl_comm::GpsCustomConstPtr & gps);
@@ -73,7 +74,6 @@ private:
   geometry_msgs::Point wgs84ToEnu(const double & latitude, const double & longitude, const double & altitude);
   geometry_msgs::Point wgs84ToNwu(const double & latitude, const double & longitude, const double & altitude);
   bool zeroHeightCb(std_srvs::EmptyRequest & req, std_srvs::EmptyResponse & resp);
-
 
 public:
   GpsConversion();
